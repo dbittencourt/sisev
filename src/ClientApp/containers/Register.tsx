@@ -1,7 +1,7 @@
 import * as React from 'react';
 import RegisterForm from '../components/registerForm';
 
-export default class Register extends React.Component<any, void>{
+export default class Register extends React.Component<any, undefined>{
 
     public render(){
         return (<div>

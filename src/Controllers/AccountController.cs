@@ -8,6 +8,7 @@ using Sisev.Models;
 
 namespace Sisev.Controllers
 {
+    [Authorize]
     public class AccountController : BaseController
     {
             UserManager<User> _userManager;
@@ -59,7 +60,7 @@ namespace Sisev.Controllers
                     var result = await _signInManager.PasswordSignInAsync(user, loginModel.PasswordLogin, isPersistent, lockoutOnFailure: false);
 
                     if (result.Succeeded)
-                    {                     
+                    {                 
                         return Ok(new {
                             redirectUrl = "/",
                             user = user});
@@ -73,10 +74,13 @@ namespace Sisev.Controllers
             }
 
             [HttpPost]
-            [ValidateAntiForgeryToken]
             public async Task<IActionResult> Logoff()
             {
-                return Ok();
+                if (_signInManager.IsSignedIn(HttpContext.User))
+                    await _signInManager.SignOutAsync();
+                return Ok(new {
+                    redirectUrl = ""
+                });
             }
 
             #region Helpers

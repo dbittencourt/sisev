@@ -26,6 +26,6 @@ class LoginForm extends Form {
  }
 
 export default connect(
-    (state: ApplicationState) => state.form,
+    (state: ApplicationState) => state.loginForm,
     FormStore.actionCreators
 )(LoginForm);

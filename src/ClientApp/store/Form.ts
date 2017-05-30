@@ -8,11 +8,11 @@ import { AppThunkAction } from './';
 export interface FormState {
     controllerAddress: string,
     fields: string[],
-    values: {}
-    errors: {},
+    values: any
+    errors: any,
     submitting: boolean,
     submitted: boolean,
-    redirectUrl: string
+    response: any
 }
 
 // actions
@@ -30,7 +30,7 @@ interface ChangeFieldValueAction {
 
 interface UpdateFieldErrorAction {
     type: 'UPDATE_ERROR',
-    fieldErrors: {} 
+    fieldErrors: any 
 }
 
 interface SubmitFormAction {
@@ -70,8 +70,7 @@ export const actionCreators = {
         type: 'UPDATE_ERROR',
         fieldErrors: errors
     },
-    submit: (): AppThunkAction<KnownAction> => (dispatch, getState) => {
-        var state = getState().form;
+    submit: (state: FormState): AppThunkAction<KnownAction> => (dispatch, getState) => {
         var submitted = true;
         if (!state.submitting){
             ApiCalls.request(state.controllerAddress, "post", state.values)
@@ -96,20 +95,13 @@ export const actionCreators = {
             dispatch({ type: 'SUBMIT_FORM'});
         }   
     },
-    redirect: (): AppThunkAction<KnownAction> => (dispatch, getState) => {
-        var url = getState().form.redirectUrl;
-        /*dispatch({
-            type: 'RESET_FORM'
-        });*/
-        browserHistory.push(url);
-    },
     reset: () => <ResetFormAction>{
         type: 'RESET_FORM'
     }
 }
 
 const initialState = { controllerAddress: "", fields: [], values: {}, errors: {}, 
-    submitting: false, submitted: false, redirectUrl: "" };
+    submitting: false, submitted: false, response: null };
 
 export const reducer: Reducer<FormState> = (state: FormState, action: KnownAction) => {
     let newState = {...state};
@@ -134,7 +126,7 @@ export const reducer: Reducer<FormState> = (state: FormState, action: KnownActio
         case 'SUBMIT_FULFILLED':
             newState.submitting = false;
             newState.submitted = true;
-            newState.redirectUrl = action.payload["redirectUrl"];
+            newState.response = action.payload;
             return newState;
         case 'SUBMIT_REJECTED':
             newState.submitting = false;

@@ -17,8 +17,7 @@ export default class Form extends React.Component<FormProps, undefined>{
     }
 
     public render(){
-        if(this.props.submitted)
-            this.props.redirect();
+
         return (<form onSubmit={this.handleSubmit}>
                     {this.renderGlobalErrors()}
                     {this.renderFormContent()}
@@ -62,7 +61,7 @@ export default class Form extends React.Component<FormProps, undefined>{
         if (hasError)
             this.props.updateErrors(errors);
         else
-            this.props.submit(); 
+            this.props.submit(this.props); 
     }
 
     protected renderGlobalErrors(){

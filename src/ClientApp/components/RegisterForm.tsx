@@ -40,7 +40,7 @@ class RegisterForm extends Form {
 
 // Wire up the React component to the Redux store
 export default connect(
-    (state: ApplicationState) => state.form, // Selects which state properties are merged into the component's props
+    (state: ApplicationState) => state.registerForm, // Selects which state properties are merged into the component's props
     FormStore.actionCreators                 // Selects which action creators are merged into the component's props
 )(RegisterForm);
 
