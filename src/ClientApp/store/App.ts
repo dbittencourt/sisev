@@ -1,4 +1,4 @@
-import {Action, Reducer, ActionCreator} from 'redux';
+import { Reducer } from 'redux';
 import { browserHistory } from 'react-router';
 import 'isomorphic-fetch';
 import ApiCalls from '../helpers/apiCalls';
@@ -25,12 +25,14 @@ type KnownAction = LoginAction | LogoutAction;
 
 // action creators
 export const actionCreators = {
-    login: (response: any) => <LoginAction>{
-        type: 'LOGIN',
-        user: response["user"]
+    redirectToHome: () => {
+        browserHistory.push("/");
     },
-    logout: () => <LogoutAction>{
-        type: 'LOGOUT'
+    logout: (): AppThunkAction<KnownAction> => (dispatch, getState) => {
+        ApiCalls.request("account/logout", "post")
+        .then(response => {
+            dispatch({ type: 'LOGOUT'});
+        });
     }
 }
 

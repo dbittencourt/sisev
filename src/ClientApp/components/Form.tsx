@@ -1,83 +1,61 @@
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { ApplicationState }  from '../store';
-import * as FormStore from '../store/Form';
+import ApiCalls from '../helpers/apiCalls';
 import Input from './Input';
-import validate from '../helpers/formValidation';
+import { SubmissionError } from 'redux-form';
 
-type FormProps = FormStore.FormState & typeof FormStore.actionCreators;
+export default abstract class Form extends React.Component<any, undefined>{
 
-export default class Form extends React.Component<FormProps, undefined>{
-    
     constructor(props){
         super(props);
-        this.handleSubmit = this.handleSubmit.bind(this);
-        this.createInput = this.createInput.bind(this);
-        this.renderGlobalErrors = this.renderGlobalErrors.bind(this);
+        this.onSubmit = this.onSubmit.bind(this);
+        this.submitForm = this.submitForm.bind(this);
+        this.onSubmitFail = this.onSubmitFail.bind(this);
     }
 
     public render(){
-
-        return (<form onSubmit={this.handleSubmit}>
-                    {this.renderGlobalErrors()}
-                    {this.renderFormContent()}
-                </form>);
+        const { handleSubmit } = this.props;
+        return (
+        <form onSubmit={handleSubmit(this.onSubmit)}>
+            {this.renderGlobalErrors()}
+            {this.renderFormContent()}
+        </form>);
     }
 
-    protected renderFormContent(){
+    // this method must be implemented because it contains the form's fields
+    protected abstract renderFormContent();
 
+    protected CreateInput(name, type, label, disabled = false){
+        return <Input name={name} type={type} label={label} disabled={disabled}/>
     }
 
-    protected createInput(name, type, label, value, error){
-        return <Input name={name} type={type} label={label} onChange={this.props.change} 
-        onError={this.props.updateErrors} value={value} error={error} />
+    protected CreateSubmitButton(label){
+        return <Input type="submit" label={label} disabled={this.props.submitting}/>
     }
 
-    protected createPasswordWithConfirmationInput(name, label, value, confirmValue, error, confirmError){
-        return (<div>
-                    <Input name={name} type="password" label={label} 
-                    onChange={this.props.change} onError={this.props.updateErrors} 
-                    value={value} error={error} comparator={confirmValue}/>
+    // this method must be implemented and call submitForm with the correct controller address
+    protected abstract onSubmit(values);
 
-                    <Input name={name + "Confirm"} type="password" label="Confirmação" 
-                    onChange={this.props.change} onError={this.props.updateErrors} 
-                    value={confirmValue} error={confirmError} comparator={value}/>
-                </div>);
+    // submits the form to the specified controller address
+    protected async submitForm(address, values){
+        var result = await ApiCalls.request(address, "post", values);
+        if (result.validationErrors)
+                this.onSubmitFail(result);
+        else 
+            return result;
     }
 
-    protected createCheckbox(name, label, value){
-        return <Input type="checkbox" name={name} label={label} 
-        value={value} onChange={this.props.change}/>
+    // if submission fails, creates submission errors with information retrieved from controller
+    protected onSubmitFail(errors){
+        var error = { _error: errors.validationErrors[""]};
+        throw new SubmissionError(error);
     }
 
-    protected createSubmitButton(label){
-        return <Input type="submitButton" label={label}/>
-    }
-
-    protected handleSubmit(event){
-        event.preventDefault();
-        var errors = validate(this.props.values);
-        var hasError = Object.keys(errors).filter(field => errors[field] != "").length > 0;
-        if (hasError)
-            this.props.updateErrors(errors);
-        else
-            this.props.submit(this.props); 
-    }
-
-    protected renderGlobalErrors(){
-        var errors = this.props.errors["global"];
-        if (errors != null && errors != undefined && errors.length > 0){
-            return (
-                <div className="alert alert-danger">
-                    {errors.map((error, index) => 
-                        <p key={index}>{error}</p>
-                    )}
-                </div>
-            );
-        }
-    }
-
-    componentWillUnmount(){
-        this.props.reset();
+    // renders submission errors retrieved from controller
+    private renderGlobalErrors(){
+        var errors = this.props.error;
+        if (errors)
+            return (<div className="alert alert-danger">
+                {errors.map((error, index) => <p key={index}>{error}</p>)}
+            </div>);
     }
 }

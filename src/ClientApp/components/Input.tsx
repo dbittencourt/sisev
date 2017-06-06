@@ -1,70 +1,64 @@
 import * as React from 'react';
-import validate from '../helpers/formValidation';
+import { Field } from 'redux-form';
+import { validateField } from '../helpers/formValidation';
 
-export default class Input extends React.Component<any, undefined>{
+export default class NewInput extends React.Component<any, undefined>{
 
     constructor(props){
         super(props);
-        this.handleChange = this.handleChange.bind(this);
     }
 
     public render(){
-        return this.renderInput();
-    }
-
-    private renderInput(){
         switch (this.props.type){
             case "text":
             case "password":
                 return this.renderTextInput();
             case "checkbox":
                 return this.renderCheckboxInput();
-            case "submitButton":
+            case "submit":
                 return this.renderSubmitButtonInput();
             default:
                 return null;
-        }
+            }
     }
 
     private renderTextInput(){
-        return (<div>
-                    <label htmlFor={this.props.name}>{this.props.label}</label>
-                    <input type={this.props.type} name={this.props.name} value={this.props.value} 
-                    placeholder={this.props.label} onChange={this.handleChange}/>
-                    {this.renderError(this.props.error)}
-                </div>);
+        return (
+                <Field name={this.props.name} component={this.renderField} type={this.props.type} 
+                label={this.props.label} placeholder={this.props.label} validate={this.validate(this.props.name)} />
+        );
     }
 
     private renderCheckboxInput(){
-        return (<div>
-                    <label htmlFor={this.props.name}>{this.props.label}</label>
-                    <input type="checkbox" name={this.props.name} value={this.props.value}
-                    onChange={this.handleChange}/>
-                </div>);
+        return (
+           <div className="form-check">
+                <label className="form-check-label" htmlFor={this.props.name}>
+                    <Field name={this.props.name} className="form-check-input" component="input" type="checkbox" /> {this.props.label}
+                </label>
+            </div>
+        );
     }
 
     private renderSubmitButtonInput(){
-        return (<div>
-                    <input type="submit" value={this.props.label} />
-                </div>);
+        return (
+                <input type="submit" className="btn btn-primary" value={this.props.label} 
+                disabled={this.props.disabled} />
+        );
     }
 
-    private renderError(error){
-        if (error != null && error != undefined && error != "")
-            return <span>{error}</span>;
+    private renderField(props){
+        return (
+            <div className="form-group">
+                <label>{props.label}</label>
+                <input {...props.input} className="form-control" placeholder={props.label} type={props.type} />
+                {props.meta.touched && (props.meta.error && <span className="text-danger has-error">{props.meta.error}</span>)}
+            </div>
+        ); 
     }
 
-    // calls the store to update the form state and then validates the field value
-    private handleChange(event){
-        var field = {};
-        if (this.props.type == "checkbox")
-            field[this.props.name] = event.target.checked;
-        else
-            field[this.props.name] = event.target.value;
-        // this.props.comparator is optional and only used in few cases, 
-        // like password confirmation fields
-        var error = validate(field, this.props.comparator);
-        this.props.onChange(this.props.name, field[this.props.name]);
-        this.props.onError(error);
+    private validate(field){
+        return (value, allValues) => {
+            return validateField(this.props.name, value, allValues);
+        }
     }
 }

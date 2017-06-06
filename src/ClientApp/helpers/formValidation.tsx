@@ -3,13 +3,13 @@ const validateName = name => {
         return "Campo obrigatório";
     if (name.length < 4)
         return "Muito curto";
-    return "";
+    return undefined;
 }
 
 const validateNotEmpty = text => {
     if (!text)
         return "Campo obrigatório";
-    return "";
+    return undefined;
 }
 
 const validateEmail = email => {
@@ -17,72 +17,44 @@ const validateEmail = email => {
         return "Campo obrigatório";
     if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(email))
         return "Email inválido";
-    return "";
+    return undefined;
 }
 
 const validateDepartment = department => {
-    return "";
+    return undefined;
 }
 
-const validatePassword = (password, passwordConfirm = null) => {
+const validatePassword = (password) => {
     if (!password)
         return "Campo obrigatório";
-    if (password != passwordConfirm && passwordConfirm != null)
+    return undefined;
+}
+
+const validatePasswordConfirm = (values) => {
+    if (values["password"] != values["passwordConfirm"])
         return "Confirmação diferente da senha";
-    return "";
+    return undefined; 
 }
 
 const validateGlobal = global => {
-    return "";
+    return undefined;
 }
 
 const validationFuncs = {
-    'email': validateEmail,
-    'name': validateName,
-    'firstName': validateName,
-    'lastName': validateName,
-    'department': validateDepartment,
-    'password': validatePassword,
-    'passwordConfirm': validatePassword,
-    'username': validateNotEmpty,
-    'passwordLogin': validateNotEmpty,
-    'global': validateGlobal,
-    'remember': validateGlobal
+    "email": validateEmail,
+    "name": validateName,
+    "firstName": validateName,
+    "lastName": validateName,
+    "department": validateDepartment,
+    "password": validatePassword,
+    "passwordConfirm": validatePasswordConfirm,
+    "username": validateNotEmpty,
+    "global": validateGlobal,
+    "remember": validateGlobal
 }
 
-
-const validate = (values, comparator?) => {
-    var errors = {};
-    var keys = Object.keys(values);
-    if (keys.length < 2){
-        let key = keys[0];
-        if (key == "password"){
-            errors[key] = validationFuncs[key](values[key]);
-            if (comparator != undefined && comparator != null)
-                errors["passwordConfirm"] = validationFuncs[key](values[key], comparator);
-        }
-        else if (key == "passwordConfirm"){
-
-            errors[key] = validationFuncs[key](comparator, values[key]);
-        }
-        else
-            errors[key] = validationFuncs[key](values[key]); 
-    }
-    else
-    {
-        keys.forEach(key => {
-            if (key == "password"){
-                errors[key] = validationFuncs[key](values[key]);
-                errors["passwordConfirm"] = validationFuncs[key](values[key], values["passwordConfirm"]);
-            }
-            else if (key == "passwordConfirm")
-                errors[key] = validationFuncs[key](values["passwordConfirm"], values[key]);
-            else
-                errors[key] = validationFuncs[key](values[key]);
-        });
-    }
-    
-    return errors;
+export const validateField = (field, value, allValues) => {
+    if (field == "passwordConfirm")
+        return validationFuncs[field](allValues);
+    return validationFuncs[field](value);
 }
-
-export default validate;

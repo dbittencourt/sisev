@@ -44,8 +44,11 @@
     "webpack-merge": "^0.14.1"
   },
   "devDependencies": {
+    "babel-plugin-transform-regenerator": "^6.24.1",
+    "babel-plugin-transform-runtime": "^6.23.0",
     "babel-polyfill": "^6.23.0",
     "babel-preset-es2016": "^6.24.1",
-    "babel-preset-es2017": "^6.24.1"
+    "babel-preset-es2017": "^6.24.1",
+    "redux-form": "^6.7.0"
   }
 }

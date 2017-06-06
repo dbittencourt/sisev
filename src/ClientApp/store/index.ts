@@ -1,12 +1,10 @@
+import { reducer as reduxFormReducer } from 'redux-form';
 import * as App from './App';
-import * as Form from './Form';
 
 
 // The top-level state object
 export interface ApplicationState {
-    app: App.AppState,
-    loginForm: Form.FormState,
-    registerForm: Form.FormState
+    app: App.AppState
 }
 
 // Whenever an action is dispatched, Redux will update each top-level application state property using
@@ -14,8 +12,7 @@ export interface ApplicationState {
 // acts on the corresponding ApplicationState property type.
 export const reducers = {
     app: App.reducer,
-    registerForm: Form.reducer,
-    loginForm: Form.reducer
+    form: reduxFormReducer
 };
 
 // This type can be used as a hint on action creators so that its 'dispatch' and 'getState' params are

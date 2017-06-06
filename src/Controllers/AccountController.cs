@@ -1,28 +1,28 @@
 using System;
+using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Sisev.Models;
 
 namespace Sisev.Controllers
 {
+
     [Authorize]
     public class AccountController : BaseController
     {
             UserManager<User> _userManager;
-            SignInManager<User> _signInManager;
 
-            public AccountController(UserManager<User> userManager, SignInManager<User> signInManager)
+            public AccountController(UserManager<User> userManager)
             {
                 _userManager = userManager;
-                _signInManager = signInManager;
             }
 
             [HttpPost]
             [AllowAnonymous]
-            //[ValidateAntiForgeryToken]
             public async Task<IActionResult> Register([FromBody]RegisterViewModel registerModel)
             {
                 if (ModelState.IsValid)
@@ -31,67 +31,82 @@ namespace Sisev.Controllers
                     User user = RegisterViewModeltoUser(registerModel);
                     var result = await _userManager.CreateAsync(user, registerModel.Password);
 
-                    // TODO: implement email notification
-
                     // if the user is created, logs him in
                     if (result.Succeeded)
                     {
-                        await _signInManager.SignInAsync(user, false);
+                        await LoginUser(user);
+
+                        // TODO: implement email notification
+                        
                         return Ok(new {
-                            redirectUrl = "/"
+                            redirectUrl = "/",
+                            user = user
                         });
                     }
                     // display user's errors
                     AddModelErrors(result);
                 }
                 // sends the model state errors to the view
-                return BadRequest(GetModelState());
+                return BadRequest(new {
+                    validationErrors = GetModelState()
+                });
             }
+
 
             [HttpPost]
             [AllowAnonymous]
-            //[ValidateAntiForgeryToken]
             public async Task<IActionResult> Login([FromBody]LoginViewModel loginModel)
             {
                 if (ModelState.IsValid)
                 {
-                    var isPersistent = !loginModel.Remember.Equals("") ? (bool) loginModel.Remember : false;
                     User user = await _userManager.FindByEmailAsync(loginModel.Email);
-                    var result = await _signInManager.PasswordSignInAsync(user, loginModel.PasswordLogin, isPersistent, lockoutOnFailure: false);
 
-                    if (result.Succeeded)
-                    {                 
+                    bool result = await _userManager.CheckPasswordAsync(user, loginModel.Password);
+
+                    if (result)
+                    {
+                        await LoginUser(user, loginModel.Remember);
                         return Ok(new {
                             redirectUrl = "/",
                             user = user});
                     }
-
-                    ModelState.AddModelError("", "Email e/ou senha inválidos");
                 }
-                
-                return BadRequest(GetModelState());
+
+                ModelState.AddModelError("", "Email e/ou senha inválidos");
+                return BadRequest(new {
+                    validationErrors = GetModelState()
+                });
                 
             }
 
             [HttpPost]
-            public async Task<IActionResult> Logoff()
+            public async Task<IActionResult> Logout()
             {
-                if (_signInManager.IsSignedIn(HttpContext.User))
-                    await _signInManager.SignOutAsync();
+                await HttpContext.Authentication.SignOutAsync("MyCookieMiddlewareInstance");
                 return Ok(new {
-                    redirectUrl = ""
+                    redirectUrl = "/"
                 });
             }
 
             #region Helpers
 
+             private async Task LoginUser(User user, bool isPersistent = false)
+            {
+                var claims = user.Claims as IEnumerable<Claim>;
+                ClaimsPrincipal principal = new ClaimsPrincipal(new ClaimsIdentity(claims, "password"));
+                AuthenticationProperties authProperties = new AuthenticationProperties(){
+                    IsPersistent = isPersistent 
+                };
+                await HttpContext.Authentication.SignInAsync("MyCookieMiddlewareInstance", principal,
+                    authProperties);
+            }
 
             // Converts a RegisterViewModel to an User
              private User RegisterViewModeltoUser(RegisterViewModel registerModel)
             {
                 return new User()
                 {
-                    UserName = registerModel.FirstName + "." + registerModel.LastName.Split(' ')[0],
+                    UserName = registerModel.Email,
                     FirstName = registerModel.FirstName,
                     LastName = registerModel.LastName,
                     Email = registerModel.Email,

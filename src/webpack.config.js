@@ -27,7 +27,7 @@ module.exports = (env) => {
     // Configuration for client-side bundle suitable for running in browsers
     const clientBundleOutputDir = './wwwroot/dist';
     const clientBundleConfig = merge(sharedConfig(), {
-        entry: { 'main-client': ['webpack-hot-middleware/client?overlay=false', './ClientApp/boot-client.tsx'] },
+        entry: { 'main-client': ['babel-polyfill', 'webpack-hot-middleware/client?overlay=false', './ClientApp/boot-client.tsx'] },
         //entry: { 'main-client': './ClientApp/boot-client.tsx' },
         module: {
             rules: [

@@ -1,31 +1,34 @@
 import * as React from 'react';
+import { browserHistory } from 'react-router';
+import { reduxForm } from 'redux-form';
 import Form from './Form';
-import { connect } from 'react-redux';
-import { ApplicationState }  from '../store';
-import * as FormStore from '../store/Form';
 
 class LoginForm extends Form {
 
-    componentDidMount(){
-        this.props.initilize("/account/login", ["email", "passwordLogin", "remember"]);
+    protected renderFormContent(){
+        return (
+            <div>
+                {this.CreateInput("email", "text", "Email")}
+                {this.CreateInput("password", "password", "Senha")}
+                {this.CreateInput("remember", "checkbox", "Lembrar de mim")}
+                {this.CreateSubmitButton("Entrar")}
+            </div>
+        );
     }
 
-    renderFormContent(){
-         return (<div>
-                    {this.createInput("email", "text", "Email", 
-                        this.props.values["email"], this.props.errors["email"])}
-                    
-                    {this.createInput("passwordLogin", "password", "Senha", 
-                        this.props.values["passwordLogin"], this.props.errors["passwordLogin"])}
+    protected async onSubmit(values){
+        return await this.submitForm("account/login", values);  
+    }
+}
 
-                    {this.createCheckbox("remember", "Lembrar de mim", this.props.values["remember"])}
-
-                    {this.createSubmitButton("Entrar")}
-                </div>);
-     }
- }
-
-export default connect(
-    (state: ApplicationState) => state.loginForm,
-    FormStore.actionCreators
-)(LoginForm);
+export default reduxForm({
+    form: 'login',
+    fields: ['email', 'password', 'remember'],
+    onSubmitSuccess: (result, dispatch, props) => {
+        dispatch({
+            type: "LOGIN",
+            user: result["user"]
+        });
+        browserHistory.push(result["redirectUrl"]);
+    }
+})(LoginForm);

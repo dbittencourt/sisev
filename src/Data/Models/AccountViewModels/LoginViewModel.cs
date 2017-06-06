@@ -11,8 +11,8 @@ namespace Sisev.Models
 
         [Required]
         [DataType(DataType.Password)]
-        public string PasswordLogin {get; set;}
+        public string Password {get; set;}
 
-        public Object Remember {get; set;}
+        public bool Remember {get; set;}
     }
 }

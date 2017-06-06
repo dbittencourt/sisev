@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sisev.Models;
 using Sisev.Data;
+using Microsoft.AspNetCore.Http;
 
 namespace WebApplicationBasic
 {
@@ -66,6 +67,16 @@ namespace WebApplicationBasic
 
             app.UseStaticFiles();
             app.UseIdentity();
+  
+            app.UseCookieAuthentication(new CookieAuthenticationOptions(){
+                AuthenticationScheme = "MyCookieMiddlewareInstance",
+                LoginPath = new PathString("/Account/login"),
+                LogoutPath = "/Account/logout",
+                AccessDeniedPath = new PathString("/"),
+                AutomaticAuthenticate = true,
+                AutomaticChallenge = true
+            });
+
             app.UseMvc(routes =>
             {
                 routes.MapRoute(
