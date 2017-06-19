@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Sisev.Models
 {
-    public class LoginViewModel 
+    public class AuthenticateViewModel 
     {
         [Required]
         [DataType(DataType.EmailAddress)]

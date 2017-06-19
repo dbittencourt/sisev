@@ -50,7 +50,8 @@ const validationFuncs = {
     "passwordConfirm": validatePasswordConfirm,
     "username": validateNotEmpty,
     "global": validateGlobal,
-    "remember": validateGlobal
+    "remember": validateGlobal,
+    "cpf": validateGlobal
 }
 
 export const validateField = (field, value, allValues) => {

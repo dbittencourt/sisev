@@ -11,6 +11,7 @@ class RegisterForm extends Form {
                 {this.CreateInput("firstName", "text", "Nome")}
                 {this.CreateInput("lastName", "text", "Sobrenome")}
                 {this.CreateInput("email", "text", "Email")}
+                {this.CreateInput("cpf", "text", "CPF")}
                 {this.CreateInput("department", "text", "Departamento")}
                 {this.CreateInput("password", "password", "Senha")}
                 {this.CreateInput("passwordConfirm", "password", "Confirmar senha")}

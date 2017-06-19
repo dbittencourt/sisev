@@ -9,9 +9,9 @@ import LoginForm from '../components/LoginForm';
 class Login extends React.Component<AppProps, undefined> {
     
     componentWillMount(){
-
+        
     }
-    
+
     public render(){
         if (this.props.loggedIn)
             return this.renderLogout();

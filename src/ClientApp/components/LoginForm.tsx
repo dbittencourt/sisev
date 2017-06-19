@@ -17,7 +17,7 @@ class LoginForm extends Form {
     }
 
     protected async onSubmit(values){
-        return await this.submitForm("account/login", values);  
+        return await this.submitForm("account/authenticate", values);  
     }
 }
 

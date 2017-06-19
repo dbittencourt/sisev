@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -12,12 +10,20 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sisev.Models;
 using Sisev.Data;
-using Microsoft.AspNetCore.Http;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
+using Sisev.Helpers;
+using System.Security.Claims;
+using System.Security.Principal;
+using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
 
-namespace WebApplicationBasic
+namespace Sisev
 {
     public class Startup
     {
+
         public Startup(IHostingEnvironment env)
         {
             var builder = new ConfigurationBuilder()
@@ -39,11 +45,25 @@ namespace WebApplicationBasic
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
             
-            
+            services.AddOptions();
+            services.Configure<TokenProviderOptions>(options => {
+                options.Audience = Configuration["TokenAuthentication:Audience"];
+                options.Issuer = Configuration["TokenAuthentication:Issuer"];
+                var signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["TokenAuthentication:SecretKey"]));
+                options.SigningCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
+            });
+
+
             services.AddEntityFrameworkNpgsql()
                 .AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(Configuration.GetConnectionString("sisev")));
 
-            services.AddMvc();
+            services.AddMvc(config  => 
+            {
+                var policy = new AuthorizationPolicyBuilder()
+                                .RequireAuthenticatedUser()
+                                .Build();
+                config.Filters.Add(new AuthorizeFilter(policy)); 
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -65,18 +85,9 @@ namespace WebApplicationBasic
                 app.UseExceptionHandler("/Home/Error");
             }
 
+            ConfigureAuth(app);
             app.UseStaticFiles();
             app.UseIdentity();
-  
-            app.UseCookieAuthentication(new CookieAuthenticationOptions(){
-                AuthenticationScheme = "MyCookieMiddlewareInstance",
-                LoginPath = new PathString("/Account/login"),
-                LogoutPath = "/Account/logout",
-                AccessDeniedPath = new PathString("/"),
-                AutomaticAuthenticate = true,
-                AutomaticChallenge = true
-            });
-
             app.UseMvc(routes =>
             {
                 routes.MapRoute(
@@ -86,6 +97,44 @@ namespace WebApplicationBasic
                 routes.MapSpaFallbackRoute(
                     name: "spa-fallback",
                     defaults: new { controller = "Home", action = "Index" });
+            });
+        }
+
+        private void ConfigureAuth(IApplicationBuilder app)
+        {
+            var signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["TokenAuthentication:SecretKey"]));
+
+            var tokenValidationParameters = new TokenValidationParameters 
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = signingKey,
+
+                ValidateIssuer = true,
+                ValidIssuer = Configuration["TokenAuthentication:Issuer"],
+
+                ValidateAudience = true,
+                ValidAudience = Configuration["TokenAuthentication:Audience"],
+
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero,
+            };
+
+            app.UseJwtBearerAuthentication(new JwtBearerOptions
+            {
+                AutomaticAuthenticate = true,
+                AutomaticChallenge = true,
+                TokenValidationParameters = tokenValidationParameters
+            });
+
+            app.UseCookieAuthentication(new CookieAuthenticationOptions
+            {
+                AuthenticationScheme = "Cookie",
+                AutomaticAuthenticate = true,
+                AutomaticChallenge = true,
+                CookieName = Configuration["TokenAuthentication:CookieName"],
+                TicketDataFormat = new CustomJwtDataFormat(SecurityAlgorithms.HmacSha256, 
+                tokenValidationParameters),
+                ExpireTimeSpan = TimeSpan.FromMinutes(5)
             });
         }
     }

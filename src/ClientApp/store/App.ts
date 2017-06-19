@@ -1,8 +1,8 @@
-import { Reducer } from 'redux';
-import { browserHistory } from 'react-router';
-import 'isomorphic-fetch';
-import ApiCalls from '../helpers/apiCalls';
-import { AppThunkAction } from './';
+import { Reducer } from "redux";
+import { browserHistory } from "react-router";
+import "isomorphic-fetch";
+import ApiCalls from "../helpers/apiCalls";
+import { AppThunkAction } from "./";
 import { UserState } from "./User";
 
 // application state
@@ -13,12 +13,12 @@ export interface AppState {
 
 // actions
 interface LoginAction {
-    type: 'LOGIN',
+    type: "LOGIN",
     user: UserState
 }
 
 interface LogoutAction {
-    type: 'LOGOUT'
+    type: "LOGOUT"
 }
 
 type KnownAction = LoginAction | LogoutAction;
@@ -31,7 +31,7 @@ export const actionCreators = {
     logout: (): AppThunkAction<KnownAction> => (dispatch, getState) => {
         ApiCalls.request("account/logout", "post")
         .then(response => {
-            dispatch({ type: 'LOGOUT'});
+            dispatch({ type: "LOGOUT"});
         });
     }
 }
@@ -44,11 +44,11 @@ const initialState = {
 export const reducer: Reducer<AppState> = (state: AppState, action: KnownAction) => {
     var newState = {...state}
     switch(action.type){
-        case 'LOGIN':
+        case "LOGIN":
             newState.loggedIn = true;
             newState.user = action.user;
             return newState;
-        case 'LOGOUT':
+        case "LOGOUT":
             newState.loggedIn = false;
             newState.user = null;
             return newState;
