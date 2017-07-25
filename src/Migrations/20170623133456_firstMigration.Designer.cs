@@ -8,8 +8,8 @@ using Sisev.Data;
 namespace Sisev.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20170511180400_FirstMigration")]
-    partial class FirstMigration
+    [Migration("20170623133456_firstMigration")]
+    partial class firstMigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -206,8 +206,6 @@ namespace Sisev.Migrations
                     b.Property<string>("FirstName");
 
                     b.Property<string>("LastName");
-
-                    b.Property<string>("Password");
 
                     b.ToTable("User");
 

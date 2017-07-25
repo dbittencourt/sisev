@@ -1,7 +1,7 @@
-import * as React from 'react';
-import { browserHistory } from 'react-router';
-import { reduxForm } from 'redux-form';
-import Form from './Form';
+import * as React from "react";
+import { browserHistory } from "react-router";
+import { reduxForm } from "redux-form";
+import Form from "./Form";
 
 class LoginForm extends Form {
 
@@ -22,13 +22,17 @@ class LoginForm extends Form {
 }
 
 export default reduxForm({
-    form: 'login',
-    fields: ['email', 'password', 'remember'],
+    form: "login",
+    fields: ["email", "password", "remember"],
     onSubmitSuccess: (result, dispatch, props) => {
         dispatch({
             type: "LOGIN",
             user: result["user"]
         });
+        if (typeof window !== "undefined"){
+            window.localStorage.setItem("user", JSON.stringify(result["user"]));
+        }
+            
         browserHistory.push(result["redirectUrl"]);
     }
 })(LoginForm);

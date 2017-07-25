@@ -1,6 +1,6 @@
-import * as React from 'react';
-import { Field } from 'redux-form';
-import { validateField } from '../helpers/formValidation';
+import * as React from "react";
+import { Field } from "redux-form";
+import { validateField } from "../helpers/formValidation";
 
 export default class NewInput extends React.Component<any, undefined>{
 
@@ -13,6 +13,8 @@ export default class NewInput extends React.Component<any, undefined>{
             case "text":
             case "password":
                 return this.renderTextInput();
+            case "select":
+                return this.renderSelect();
             case "checkbox":
                 return this.renderCheckboxInput();
             case "submit":
@@ -36,6 +38,18 @@ export default class NewInput extends React.Component<any, undefined>{
                     <Field name={this.props.name} className="form-check-input" component="input" type="checkbox" /> {this.props.label}
                 </label>
             </div>
+        );
+    }
+
+    private renderSelect(){
+        return (
+            <div className="form-group">
+                <label>{this.props.label} </label>
+                <Field name={this.props.name} className="form-control" component="select" placeholder={this.props.label}>
+                    {this.props.options.map(option => <option value={option}>{option}</option>)}
+                </Field>
+            </div>
+            
         );
     }
 

@@ -23,7 +23,6 @@ namespace Sisev
 {
     public class Startup
     {
-
         public Startup(IHostingEnvironment env)
         {
             var builder = new ConfigurationBuilder()
@@ -39,12 +38,22 @@ namespace Sisev
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddAuthorization();
+            services.AddAuthorization(options => {
+                options.AddPolicy("AdminRead", policy => policy.RequireClaim("CanRead", "admin"));
+                options.AddPolicy("ManagerRead", policy => policy.RequireClaim("CanRead", "admin", "manager"));
+                options.AddPolicy("AdminCreate", policy => policy.RequireClaim("CanCreate", "admin"));
+                options.AddPolicy("ManagerCreate", policy => policy.RequireClaim("CanCreate", "admin", "manager"));
+                options.AddPolicy("AdminEdit", policy => policy.RequireClaim("CanEdit", "admin"));
+                options.AddPolicy("ManagerEdit", policy => policy.RequireClaim("CanEdit", "admin", "manager"));
+                options.AddPolicy("AdminDelete", policy => policy.RequireClaim("CanDelete", "admin"));
+                options.AddPolicy("ManagerDelete", policy => policy.RequireClaim("CanDelete", "admin", "manager"));
+            });
 
             services.AddIdentity<User, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
-            
+            services.AddTransient<DbSeedData>();
+
             services.AddOptions();
             services.Configure<TokenProviderOptions>(options => {
                 options.Audience = Configuration["TokenAuthentication:Audience"];
@@ -52,7 +61,6 @@ namespace Sisev
                 var signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["TokenAuthentication:SecretKey"]));
                 options.SigningCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
             });
-
 
             services.AddEntityFrameworkNpgsql()
                 .AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(Configuration.GetConnectionString("sisev")));
@@ -67,7 +75,7 @@ namespace Sisev
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, DbSeedData seeder)
         {
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
@@ -88,6 +96,7 @@ namespace Sisev
             ConfigureAuth(app);
             app.UseStaticFiles();
             app.UseIdentity();
+            seeder.Seed();
             app.UseMvc(routes =>
             {
                 routes.MapRoute(

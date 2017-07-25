@@ -8,7 +8,8 @@ import { UserState } from "./User";
 // application state
 export interface AppState {
     loggedIn: boolean,
-    user: UserState
+    user: UserState,
+    statusMessage: string
 }
 
 // actions
@@ -21,7 +22,16 @@ interface LogoutAction {
     type: "LOGOUT"
 }
 
-type KnownAction = LoginAction | LogoutAction;
+interface SetStatusMessage {
+    type: "SET_STATUS_MESSAGE",
+    message: string
+}
+
+interface ClearStatusMessage {
+    type: "CLEAR_STATUS_MESSAGE"
+}
+
+type KnownAction = LoginAction | LogoutAction | SetStatusMessage | ClearStatusMessage;
 
 // action creators
 export const actionCreators = {
@@ -29,20 +39,23 @@ export const actionCreators = {
         browserHistory.push("/");
     },
     logout: (): AppThunkAction<KnownAction> => (dispatch, getState) => {
-        ApiCalls.request("account/logout", "post")
-        .then(response => {
-            dispatch({ type: "LOGOUT"});
-        });
+        ApiCalls.request("account/logout", "post");
+        dispatch({ type: "LOGOUT"});
+        if (typeof window !== "undefined")
+            window.localStorage.removeItem("user");
+    },
+    getStatusMessage: (): AppThunkAction<KnownAction> => (dispatch, getState) => {
+        return getState().app.statusMessage;
+    },
+    clearStatusMessage: (): AppThunkAction<KnownAction> => (dispatch, getState) => {
+        dispatch({ type: "CLEAR_STATUS_MESSAGE"});
     }
 }
 
-const initialState = {
-    loggedIn: false, user: null
-};
-
+const initialState = { user: null, loggedIn: false, statusMessage: null }
 // reducer
 export const reducer: Reducer<AppState> = (state: AppState, action: KnownAction) => {
-    var newState = {...state}
+    var newState = {...state};
     switch(action.type){
         case "LOGIN":
             newState.loggedIn = true;
@@ -51,6 +64,12 @@ export const reducer: Reducer<AppState> = (state: AppState, action: KnownAction)
         case "LOGOUT":
             newState.loggedIn = false;
             newState.user = null;
+            return newState;
+        case "SET_STATUS_MESSAGE":
+            newState.statusMessage = action.message;
+            return newState;
+        case "CLEAR_STATUS_MESSAGE":
+            newState.statusMessage = null;
             return newState;
         default:
              const exhaustiveCheck: never = action;

@@ -1,8 +1,8 @@
-import 'isomorphic-fetch';
+import "isomorphic-fetch";
 
 const requestHeader = {
-        'Accept': 'application/json, text/plain, */*',
-        'Content-Type': 'application/json'
+        "Accept": "application/json, text/plain, */*",
+        "Content-Type": "application/json"
 };
 
 const requestCredentials = "same-origin";
@@ -21,10 +21,10 @@ export default class ApiCalls {
         var lower = method.toLowerCase();
         var requestInit;
         switch(lower){
-            case 'post':
-                requestInit = this.createRequest(requestBody, 'post');
+            case "post":
+                requestInit = this.createRequest(requestBody, "post");
                 break;
-            case 'get':
+            case "get":
             default:
                 requestInit = this.createRequest(requestBody);
         }
@@ -32,7 +32,7 @@ export default class ApiCalls {
         return await fetch(address, requestInit).then(response => response.json());
     }
 
-    private static createRequest(body, requestMethod = 'get'): DefaultRequest {
+    private static createRequest(body, requestMethod = "get"): DefaultRequest {
         let req: DefaultRequest ={
             method: requestMethod,
             headers: requestHeader,

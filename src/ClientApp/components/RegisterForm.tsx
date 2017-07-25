@@ -1,7 +1,7 @@
-import * as React from 'react';
-import { browserHistory } from 'react-router';
-import { reduxForm } from 'redux-form';
-import Form from './Form';
+import * as React from "react";
+import { browserHistory } from "react-router";
+import { reduxForm } from "redux-form";
+import Form from "./Form";
 
 class RegisterForm extends Form {
 
@@ -13,6 +13,7 @@ class RegisterForm extends Form {
                 {this.CreateInput("email", "text", "Email")}
                 {this.CreateInput("cpf", "text", "CPF")}
                 {this.CreateInput("department", "text", "Departamento")}
+                {this.CreateSelect("role", "Nível", ["user", "manager", "admin"])}
                 {this.CreateInput("password", "password", "Senha")}
                 {this.CreateInput("passwordConfirm", "password", "Confirmar senha")}
                 {this.CreateSubmitButton("Registrar")}
@@ -26,13 +27,11 @@ class RegisterForm extends Form {
 }
 
 export default reduxForm({
-    form: 'register',
-    fields: ['firstName', 'lastName', 'email', 'department', 'password'],
+    form: "register",
+    fields: ["firstName", "lastName", "email", "department", "password"],
     onSubmitSuccess: (result, dispatch, props) => {
-        dispatch({
-            type: "LOGIN",
-            user: result["user"]
-        });
+        dispatch({ type: "SET_STATUS_MESSAGE",
+                   message: result["statusMessage"]});
         browserHistory.push(result["redirectUrl"]);
     }
 })(RegisterForm);

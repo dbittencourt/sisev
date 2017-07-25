@@ -11,7 +11,7 @@ export default createServerRenderer(params => {
     return new Promise<RenderResult>((resolve, reject) => {
         // Match the incoming request against the list of client-side routes
         const store = configureStore();
-        match({ routes, location: params.location }, (error, redirectLocation, renderProps: any) => {
+        match({ routes: routes(store), location: params.location }, (error, redirectLocation, renderProps: any) => {
             if (error) {
                 throw error;
             }

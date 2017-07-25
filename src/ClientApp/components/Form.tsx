@@ -28,6 +28,11 @@ export default abstract class Form extends React.Component<any, undefined>{
         return <Input name={name} type={type} label={label} disabled={disabled}/>
     }
 
+    protected CreateSelect(name, label, options){
+        if (options)
+            return <Input name={name} type="select" label={label} options={options}/>
+    }
+
     protected CreateSubmitButton(label){
         return <Input type="submit" label={label} disabled={this.props.submitting}/>
     }

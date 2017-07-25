@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace WebApplicationBasic.Controllers
+namespace Sisev.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController : BaseController
     {
         [AllowAnonymous]
         public IActionResult Index()

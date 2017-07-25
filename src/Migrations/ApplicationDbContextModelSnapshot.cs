@@ -206,8 +206,6 @@ namespace Sisev.Migrations
 
                     b.Property<string>("LastName");
 
-                    b.Property<string>("Password");
-
                     b.ToTable("User");
 
                     b.HasDiscriminator().HasValue("User");

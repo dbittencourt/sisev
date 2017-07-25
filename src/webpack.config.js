@@ -28,7 +28,6 @@ module.exports = (env) => {
     const clientBundleOutputDir = './wwwroot/dist';
     const clientBundleConfig = merge(sharedConfig(), {
         entry: { 'main-client': ['babel-polyfill', 'webpack-hot-middleware/client?overlay=false', './ClientApp/boot-client.tsx'] },
-        //entry: { 'main-client': './ClientApp/boot-client.tsx' },
         module: {
             rules: [
                 { test: /\.css$/, use: ExtractTextPlugin.extract({ use: 'css-loader' }) },
@@ -57,7 +56,7 @@ module.exports = (env) => {
     // Configuration for server-side (prerendering) bundle suitable for running in Node
     const serverBundleConfig = merge(sharedConfig(), {
         resolve: { mainFields: ['main'] },
-        entry: { 'main-server': './ClientApp/boot-server.tsx' },
+        entry: { 'main-server': ['babel-polyfill', './ClientApp/boot-server.tsx'] },
         plugins: [
             new webpack.DllReferencePlugin({
                 context: __dirname,

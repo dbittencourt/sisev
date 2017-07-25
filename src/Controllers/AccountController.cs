@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -16,6 +18,7 @@ namespace Sisev.Controllers
     public class AccountController : BaseController
     {
         private UserManager<User> _userManager;
+
         private readonly TokenProviderOptions _options;
         
         public AccountController(UserManager<User> userManager, IOptions<TokenProviderOptions> options)
@@ -27,6 +30,7 @@ namespace Sisev.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "AdminCreate")]
         public async Task<IActionResult> Register([FromBody]RegisterViewModel registerModel)
         {
             if (ModelState.IsValid)
@@ -35,15 +39,18 @@ namespace Sisev.Controllers
                 User user = RegisterViewModeltoUser(registerModel);
                 var result = await _userManager.CreateAsync(user, registerModel.Password);
 
-                // if the user is created, logs him in
+                // if the user is created, adds hims claims
                 if (result.Succeeded)
                 {
+                    var userClaims = CreateClaims(registerModel);
+                    await _userManager.AddClaimsAsync(user, userClaims);
+
                     // TODO: implement email notification
                     
                     return Ok(new 
                     {
                         redirectUrl = "/",
-                        user = user
+                        statusMessage = "Usuário criado com sucesso."
                     });
                 }
                 // display user's errors
@@ -57,34 +64,26 @@ namespace Sisev.Controllers
         }
 
         [HttpPost]
-        //[AllowAnonymous]
+        [AllowAnonymous]
         public async Task<IActionResult> Authenticate([FromBody] AuthenticateViewModel loginModel)
         {
+            var user =  await _userManager.FindByEmailAsync(loginModel.Email);
             // checks if the password is correct
-            var validPassword = await VerifyPassword(loginModel.Email, loginModel.Password);
+            var validPassword = await VerifyPassword(user, loginModel.Password);
 
             if (validPassword)
             {
-                var now = DateTime.UtcNow;
-
-                var claims = new Claim[]
-                {
-                    new Claim(JwtRegisteredClaimNames.Sub, loginModel.Email),
-                    new Claim(JwtRegisteredClaimNames.Jti, await _options.NonceGenerator()),
-                    new Claim(JwtRegisteredClaimNames.Iat, new DateTimeOffset(now).ToUniversalTime().ToUnixTimeSeconds().ToString(), ClaimValueTypes.String)
-                };
-
-                // creates the jwt and writes it to a string
-                var jwt = new JwtSecurityToken(issuer: _options.Issuer, audience: _options.Audience, claims: claims,
-                notBefore: now, expires: now.Add(_options.Expiration), signingCredentials: _options.SigningCredentials);
-                var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
-
+                var encodedJwt = await GenerateToken(user);
                 // puts jwt in response cookies
                 HttpContext.Response.Cookies.Append("access_token", encodedJwt);
 
+                var userClaims = await _userManager.GetClaimsAsync(user);
+                // gets user claims
+                ClientUser cUser = ToClientUser(user, userClaims);
                 return Ok(new 
                 {
-                    redirectUrl = "/"
+                    redirectUrl = "/",
+                    user = cUser
                 });
             }
             else
@@ -112,7 +111,7 @@ namespace Sisev.Controllers
         {
             if (ModelState.IsValid)
             {
-                User user = await EditViewModeltoUser(editModel);
+                User user = EditViewModeltoUser(editModel);
                 var result = await _userManager.UpdateAsync(user);
                 if (result.Succeeded)
                 {
@@ -135,9 +134,8 @@ namespace Sisev.Controllers
         /// <summary>
         /// Verifies if the given username and password are correct
         /// </summary>
-        private async Task<bool> VerifyPassword(string username, string password)
+        private async Task<bool> VerifyPassword(User user, string password)
         {
-            var user = await _userManager.FindByEmailAsync(username);
             if (user != null)
             {
                 var validPassword = await _userManager.CheckPasswordAsync(user, password);
@@ -145,6 +143,58 @@ namespace Sisev.Controllers
                     return true;
             }
             return false;
+        }
+
+        private IEnumerable<Claim> CreateClaims(RegisterViewModel registerModel)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, registerModel.Email),
+            };
+
+            if (registerModel.Role.Equals("admin"))
+                claims.AddRange(CreateAdminClaims());
+            if (registerModel.Role.Equals("manager"))
+                claims.AddRange(CreateManagerClaims());
+            return claims.ToArray();
+        }
+
+        private IEnumerable<Claim> CreateAdminClaims()
+        {
+            return new List<Claim>{
+                new Claim("CanCreate", "admin"),
+                new Claim("CanRead", "admin"),
+                new Claim("CanEdit", "admin"),
+                new Claim("CanDelete", "admin")
+            };
+        }
+        private IEnumerable<Claim> CreateManagerClaims()
+        {
+            return new List<Claim>{
+                new Claim("CanCreate", "manager"),
+                new Claim("CanRead", "manager"),
+                new Claim("CanEdit", "manager"),
+                new Claim("CanDelete", "manager")
+            };
+        }
+
+        private async Task<string> GenerateToken(User user)
+        {
+            var now = DateTime.UtcNow;
+
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Jti, await _options.NonceGenerator()),
+                new Claim(JwtRegisteredClaimNames.Iat, new DateTimeOffset(now).ToUniversalTime().ToUnixTimeSeconds().ToString(), ClaimValueTypes.String)
+            };
+
+            claims.AddRange(await _userManager.GetClaimsAsync(user));
+
+            // creates the jwt and writes it to a string
+            var jwt = new JwtSecurityToken(issuer: _options.Issuer, audience: _options.Audience, claims: claims,
+            notBefore: now, expires: now.Add(_options.Expiration), signingCredentials: _options.SigningCredentials);
+            var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
+            return encodedJwt;
         }
 
         /// <summary>
@@ -182,20 +232,32 @@ namespace Sisev.Controllers
             };
         }
 
-        private async Task<User> EditViewModeltoUser(EditViewModel editModel)
-        {
-            User user = await _userManager.GetUserAsync(HttpContext.User);
-
-            if (editModel.Department != null)
-                user.Department = editModel.Department;
-            if (editModel.FirstName != null)
-                user.FirstName = editModel.FirstName;
-            if (editModel.LastName != null)
-                user.LastName = editModel.LastName;
-        
-            return user;
+        private User EditViewModeltoUser(EditViewModel editModel)
+        {   
+            return new User()
+            {
+                Department = editModel.Department,
+                FirstName = editModel.FirstName,
+                LastName = editModel.LastName
+            };
         }
 
+        private ClientUser ToClientUser(User user, IEnumerable<Claim> userClaims)
+        {
+            ClientUser cUser = new ClientUser();
+            cUser.CPF = user.CPF;
+            cUser.Department = user.Department;
+            cUser.Email = user.Email;
+            cUser.FirstName = user.FirstName;
+            cUser.LastName = user.LastName;
+            Dictionary<string,string> claims = new Dictionary<string,string>();
+            foreach (var claim in userClaims)
+            {
+                claims.Add(claim.Type, claim.Value);
+            }
+            cUser.Claims = claims;
+            return cUser;
+        }
 
     }
 }
