@@ -4,12 +4,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
-using Sisev.Models;
 
 namespace Sisev.Controllers
 {
     [Route("api/[controller]")]
-    public class RolesController : BaseController
+    public class RolesController : Controller
     {
         private RoleManager<IdentityRole> _roleManager;
         

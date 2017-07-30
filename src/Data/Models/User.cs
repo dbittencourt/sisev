@@ -1,6 +1,8 @@
-namespace Sisev.Models
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+
+namespace Sisev.Data.Models
 {
-    public class User : BaseEntity
+    public class User : IdentityUser
     {
         public string FirstName {get; set;}
         public string LastName {get; set;}

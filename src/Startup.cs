@@ -8,8 +8,8 @@ using Microsoft.AspNetCore.SpaServices.Webpack;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Sisev.Models;
 using Sisev.Data;
+using Sisev.Data.Models;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using Sisev.Helpers;
@@ -64,6 +64,8 @@ namespace Sisev
 
             services.AddEntityFrameworkNpgsql()
                 .AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(Configuration.GetConnectionString("sisev")));
+
+            services.AddScoped(typeof(IRepository<,>), typeof(SQLRepository<,>));
 
             services.AddMvc(config  => 
             {

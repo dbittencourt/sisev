@@ -10,8 +10,8 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using Sisev.Data.Models;
 using Sisev.Helpers;
-using Sisev.Models;
 
 namespace Sisev.Controllers
 {
@@ -80,6 +80,7 @@ namespace Sisev.Controllers
                 var userClaims = await _userManager.GetClaimsAsync(user);
                 // gets user claims
                 ClientUser cUser = ToClientUser(user, userClaims);
+
                 return Ok(new 
                 {
                     redirectUrl = "/",

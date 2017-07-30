@@ -4,7 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Sisev.Models;
+using Sisev.Data.Models;
 
 namespace Sisev.Data
 {

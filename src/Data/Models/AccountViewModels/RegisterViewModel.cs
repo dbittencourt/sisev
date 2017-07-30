@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Sisev.Models
+namespace Sisev.Data.Models
 {
     public class RegisterViewModel
     {

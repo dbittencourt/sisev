@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Sisev.Models;
+using Sisev.Data.Models;
 
 namespace Sisev.Data
 {

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Sisev.Models 
+namespace Sisev.Data.Models 
 {
     public class ClientUser
     {
